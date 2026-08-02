@@ -1,0 +1,104 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Prototipo Venta de Entradas - Web URL</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f9; }
+        .container { max-width: 800px; margin: auto; display: flex; gap: 20px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex: 1; }
+        h2 { color: #0033a0; border-bottom: 2px solid #ccc; padding-bottom: 10px; }
+        input, select, button { width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ccc; }
+        button { background-color: #0033a0; color: white; cursor: pointer; border: none; font-weight: bold; }
+        button:disabled { background-color: #888; cursor: not-allowed; }
+        .log { background: #333; color: #0f0; padding: 10px; height: 150px; overflow-y: scroll; font-family: monospace; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center; color: #0033a0;">Sistema de Eventos - Prototipo V2</h1>
+    <div class="container">
+        <!-- Panel Administrador -->
+        <div class="card">
+            <h2>Panel Admin</h2>
+            <input type="text" id="eventName" placeholder="Nombre del Evento" value="Concierto Rock">
+            <input type="number" id="eventCapacity" placeholder="Capacidad Total" value="10">
+            <button onclick="crearEvento()">Crear Evento</button>
+            <hr>
+            <h3>Estado del Evento</h3>
+            <p>Disponibles: <strong id="stockDisplay">-</strong></p>
+        </div>
+
+        <!-- Panel Usuario -->
+        <div class="card">
+            <h2>Panel Usuario (Compra)</h2>
+            <select id="eventSelect">
+                <option value="">Seleccione evento...</option>
+            </select>
+            <input type="number" id="buyAmount" placeholder="Cantidad de entradas (Max 5)" min="1" max="5">
+            <button id="btnBuy" onclick="comprar()">Simular Compra</button>
+            <hr>
+            <div class="log" id="systemLog">-- LOG DEL SISTEMA --<br></div>
+        </div>
+    </div>
+
+    <script>
+        let currentEvent = null;
+
+        function logMensaje(msg) {
+            const logPanel = document.getElementById('systemLog');
+            logPanel.innerHTML += msg + '<br>';
+            logPanel.scrollTop = logPanel.scrollHeight;
+        }
+
+        function crearEvento() {
+            const nombre = document.getElementById('eventName').value;
+            const capacidad = parseInt(document.getElementById('eventCapacity').value);
+            
+            if(!nombre || capacidad <= 0) {
+                alert("Datos de evento inválidos"); return;
+            }
+
+            currentEvent = { nombre: nombre, capacidad: capacidad };
+            document.getElementById('stockDisplay').innerText = capacidad;
+            
+            const select = document.getElementById('eventSelect');
+            select.innerHTML = `<option value="1">${nombre}</option>`;
+            
+            document.getElementById('btnBuy').disabled = false;
+            logMensaje(`> Evento creado: ${nombre} | Stock: ${capacidad}`);
+        }
+
+        function comprar() {
+            if(!currentEvent) { alert("No hay eventos disponibles"); return; }
+            
+            const cant = parseInt(document.getElementById('buyAmount').value);
+            
+            if(isNaN(cant) || cant <= 0) {
+                alert("Ingrese una cantidad válida mayor a 0"); return;
+            }
+            if(cant > 5) {
+                alert("Criterio fallido: No se permiten más de 5 entradas (V2)");
+                logMensaje(`> ERROR: Intento de compra excede el límite global (5).`);
+                return;
+            }
+            if(cant > currentEvent.capacidad) {
+                alert("Stock insuficiente para esta compra.");
+                logMensaje(`> ERROR: Stock insuficiente. Pedidas: ${cant}, Disponibles: ${currentEvent.capacidad}`);
+                return;
+            }
+
+            // Procesa compra exitosa
+            currentEvent.capacidad -= cant;
+            document.getElementById('stockDisplay').innerText = currentEvent.capacidad;
+            logMensaje(`> COMPRA EXITOSA: ${cant} entradas. Stock restante: ${currentEvent.capacidad}`);
+
+            if(currentEvent.capacidad === 0) {
+                document.getElementById('btnBuy').disabled = true;
+                document.getElementById('btnBuy').innerText = "AGOTADO";
+                logMensaje(`> AVISO: El evento se ha agotado.`);
+            }
+        }
+    </script>
+</body>
+</html>
